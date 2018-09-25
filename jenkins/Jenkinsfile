@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    stages {
+//		stage ('clone') {
+//			steps {
+//				sh "jenkins/clone.sh"
+//			}
+//		}
+        stage ('build messaging') {
+            steps {
+                dir('grzeda-messaging') {
+                    script {
+                        sh "mvn package"
+                    }
+                }
+            }
+        }
+        stage ('deploy messaging') {
+            steps {
+                dir('grzeda-messaging') {
+                    script {
+                        sh "mvn deploy:deploy-file -Durl=file:///var/www/html/ -Dfile=target/grzeda-messaging-0.0.1-SNAPSHOT.jar -DgroupId=com.rookies.grzeda -DartifactId=grzeda-messaging -Dpackaging=jar -Dversion=0.0.1-SNAPSHOT"
+                    }
+                }
+            }
+        }
+//        stage ('build server') {
+//            steps {
+//                dir('grzeda-server') {
+//                    script {
+//                        sh "mvn package"
+//                    }
+//                }
+//            }
+//        }
+//        stage ('build test client') {
+//            steps {
+//                dir('grzeda-test-client') {
+//                    script {
+//                        sh "mvn package"
+//                    }
+//                }
+//            }
+//        }
+        stage ('run tests') {
+			steps {
+				dir('grzeda-messaging'){
+					sh "jenkins/test_script.sh"
+				}
+			}
+		}
+
+    }
+    post {
+        always {
+		    deleteDir()
+        }
+    }
+}
